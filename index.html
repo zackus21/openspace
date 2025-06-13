@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Plan de l'open space</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; text-align: center; }
+    img { max-width: 90%; height: auto; margin-top: 20px; }
+    .poste {
+      position: absolute;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      text-align: center;
+      font-size: 12px;
+      color: white;
+      z-index: 10;
+    }
+    .jamais { background-color: #007bff; }  /* bleu */
+    .occupe { background-color: #28a745; }  /* vert */
+    .expire { background-color: #dc3545; }  /* rouge */
+    .datepicker-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .datepicker-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .datepicker-box input[type="date"],
+    .datepicker-box input[type="text"] {
+      font-size: 16px;
+      padding: 5px;
+      margin-top: 10px;
+    }
+    .datepicker-box button {
+      margin-top: 10px;
+      font-size: 14px;
+      padding: 5px 12px;
+    }
+    #configBtn {
+      margin-top: 20px;
+      font-size: 14px;
+      padding: 8px 16px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Plan de l'open space</h1>
+  <button id="configBtn">Configurer les noms</button>
+  <div style="position: relative; display: inline-block;">
+    <img src="OpenSpace.jpg" alt="Plan Open Space">
+    <div id="postes"></div>
+  </div>
+
+  <script>
+    const postes = [
+      { id: 1, top: 210, left: 162 }, { id: 2, top: 214, left: 349 },
+      { id: 3, top: 340, left: 560 }, { id: 4, top: 469, left: 349 },
+      { id: 5, top: 470, left: 163 }, { id: 6, top: 587, left: 164 },
+      { id: 7, top: 714, left: 376 }, { id: 8, top: 848, left: 166 },
+      { id: 9, top: 566, left: 665 }, { id: 10, top: 827, left: 662 },
+      { id: 11, top: 852, left: 856 }, { id: 12, top: 606, left: 861 },
+      { id: 13, top: 202, left: 1080 }, { id: 14, top: 205, left: 1301 },
+      { id: 15, top: 454, left: 1098 }, { id: 16, top: 468, left: 1277 },
+      { id: 17, top: 759, left: 1291 }, { id: 18, top: 775, left: 1560 }
+    ];
+
+    const container = document.getElementById("postes");
+
+    function showDatePicker(posteId, el) {
+      const overlay = document.createElement("div");
+      overlay.className = "datepicker-overlay";
+
+      const box = document.createElement("div");
+      box.className = "datepicker-box";
+
+      const input = document.createElement("input");
+      input.type = "date";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Valider";
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Annuler";
+      cancelBtn.style.marginLeft = "10px";
+
+      box.appendChild(document.createTextNode("Sélectionne ta date de retour :"));
+      box.appendChild(document.createElement("br"));
+      box.appendChild(input);
+      box.appendChild(document.createElement("br"));
+      box.appendChild(saveBtn);
+      const nameBtn = document.createElement("button");
+      nameBtn.textContent = "Renommer le poste";
+      nameBtn.style.marginLeft = "10px";
+      box.appendChild(document.createElement("br"));
+      box.appendChild(nameBtn);
+      nameBtn.onclick = () => {
+        const newName = prompt("Nouveau nom pour ce poste :", localStorage.getItem("poste_nom_" + posteId) || `Poste ${posteId}`);
+        if (newName) {
+          localStorage.setItem("poste_nom_" + posteId, newName);
+          updateDisplay(el, posteId, localStorage.getItem("poste_" + posteId));
+        }
+      };
+      box.appendChild(cancelBtn);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      cancelBtn.onclick = () => document.body.removeChild(overlay);
+
+      saveBtn.onclick = () => {
+        if (input.value) {
+          const formatted = input.value.split("-").reverse().join("/");
+          const text = `De retour le ${formatted}`;
+          localStorage.setItem("poste_" + posteId, text);
+          updateDisplay(el, posteId, text);
+          document.body.removeChild(overlay);
+        }
+      };
+    }
+
+    function updateDisplay(el, id, text) {
+      const name = localStorage.getItem("poste_nom_" + id) || `Poste ${id}`;
+      el.className = "poste";
+
+      if (!text) {
+        el.classList.add("jamais");
+        el.innerHTML = `${name}`;
+      } else {
+        const dateStr = text.replace("De retour le ", "");
+        const [jour, mois, annee] = dateStr.split("/").map(Number);
+        const retourDate = new Date(annee, mois - 1, jour);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        if (retourDate < today) {
+          el.classList.add("expire");
+        } else {
+          el.classList.add("occupe");
+        }
+
+        el.innerHTML = `${name}<br><small>${text}</small>`;
+      }
+    }
+
+    postes.forEach(p => {
+      const el = document.createElement("div");
+      el.style.top = p.top + "px";
+      el.style.left = p.left + "px";
+      const saved = localStorage.getItem("poste_" + p.id);
+      updateDisplay(el, p.id, saved);
+
+      el.onclick = () => {
+        const current = localStorage.getItem("poste_" + p.id);
+        if (current) {
+          if (confirm("Ce poste est libre. Souhaitez-vous le réinitialiser ?")) {
+            localStorage.removeItem("poste_" + p.id);
+            updateDisplay(el, p.id, null);
+          }
+        } else {
+          showDatePicker(p.id, el);
+        }
+      };
+
+      container.appendChild(el);
+    });
+
+    document.getElementById("configBtn").onclick = () => {
+      postes.forEach(p => {
+        const nom = prompt(`Nom à afficher pour le poste ${p.id} :`, localStorage.getItem("poste_nom_" + p.id) || `Poste ${p.id}`);
+        if (nom !== null) {
+          localStorage.setItem("poste_nom_" + p.id, nom);
+          const el = [...document.getElementsByClassName("poste")][p.id - 1];
+          const text = localStorage.getItem("poste_" + p.id);
+          updateDisplay(el, p.id, text);
+        }
+      });
+    };
+  </script>
+</body>
+</html>
