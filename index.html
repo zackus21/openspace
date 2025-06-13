@@ -3,10 +3,29 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Plan de l'open space</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f2f2f2; text-align: center; }
     img { max-width: 90%; height: auto; margin-top: 20px; }
+    #planContainer {
+      position: relative;
+      display: inline-block;
+      max-width: 90%;
+      margin-top: 20px;
+    }
+    #planContainer img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    #postes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
     .poste {
       position: absolute;
       padding: 4px 6px;
@@ -32,11 +51,7 @@
     }
     .datepicker-box {
       background: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
-    .datepicker-box input[type="date"],
+@@ -40,69 +58,71 @@
     .datepicker-box input[type="text"] {
       font-size: 16px;
       padding: 5px;
@@ -63,6 +78,7 @@
   <h1>Plan de l'open space</h1>
   <button id="configBtn">Configurer les noms</button>
   <div style="position: relative; display: inline-block;">
+  <div id="planContainer">
     <img src="OpenSpace.jpg" alt="Plan Open Space">
     <div id="postes"></div>
   </div>
@@ -81,6 +97,8 @@
     ];
 
     const container = document.getElementById("postes");
+    const BASE_WIDTH = 1560;
+    const BASE_HEIGHT = 852;
 
     function showDatePicker(posteId, el) {
       const overlay = document.createElement("div");
@@ -106,34 +124,7 @@
       box.appendChild(saveBtn);
       const nameBtn = document.createElement("button");
       nameBtn.textContent = "Renommer le poste";
-      nameBtn.style.marginLeft = "10px";
-      box.appendChild(document.createElement("br"));
-      box.appendChild(nameBtn);
-      nameBtn.onclick = () => {
-        const newName = prompt("Nouveau nom pour ce poste :", localStorage.getItem("poste_nom_" + posteId) || `Poste ${posteId}`);
-        if (newName) {
-          localStorage.setItem("poste_nom_" + posteId, newName);
-          updateDisplay(el, posteId, localStorage.getItem("poste_" + posteId));
-        }
-      };
-      box.appendChild(cancelBtn);
-      overlay.appendChild(box);
-      document.body.appendChild(overlay);
-
-      cancelBtn.onclick = () => document.body.removeChild(overlay);
-
-      saveBtn.onclick = () => {
-        if (input.value) {
-          const formatted = input.value.split("-").reverse().join("/");
-          const text = `De retour le ${formatted}`;
-          localStorage.setItem("poste_" + posteId, text);
-          updateDisplay(el, posteId, text);
-          document.body.removeChild(overlay);
-        }
-      };
-    }
-
-    function updateDisplay(el, id, text) {
+@@ -137,52 +157,52 @@
       const name = localStorage.getItem("poste_nom_" + id) || `Poste ${id}`;
       el.className = "poste";
 
@@ -161,6 +152,8 @@
       const el = document.createElement("div");
       el.style.top = p.top + "px";
       el.style.left = p.left + "px";
+      el.style.top = (p.top / BASE_HEIGHT * 100) + "%";
+      el.style.left = (p.left / BASE_WIDTH * 100) + "%";
       const saved = localStorage.getItem("poste_" + p.id);
       updateDisplay(el, p.id, saved);
 
@@ -186,10 +179,3 @@
           localStorage.setItem("poste_nom_" + p.id, nom);
           const el = [...document.getElementsByClassName("poste")][p.id - 1];
           const text = localStorage.getItem("poste_" + p.id);
-          updateDisplay(el, p.id, text);
-        }
-      });
-    };
-  </script>
-</body>
-</html>
